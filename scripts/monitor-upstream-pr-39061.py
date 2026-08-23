@@ -118,7 +118,7 @@ def fetch_state() -> dict[str, Any]:
     pr = json.loads(gh(
         "pr", "view", str(UPSTREAM_PR_NUMBER),
         "--json",
-        "state,isDraft,mergeable,reviewDecision,additions,deletions,changedFiles,maintainerCanModify,headRefName,baseRefName,url",
+        "state,isDraft,mergeable,reviewDecision,additions,deletions,changedFiles,maintainerCanModify,headRefName,headRefOid,baseRefName,url",
     ))
     issue = json.loads(gh(
         "issue", "view", str(UPSTREAM_ISSUE_NUMBER),
@@ -129,8 +129,9 @@ def fetch_state() -> dict[str, Any]:
     reviews = gh_api(f"repos/{UPSTREAM_REPO}/pulls/{UPSTREAM_PR_NUMBER}/reviews")
     review_comments = gh_api(f"repos/{UPSTREAM_REPO}/pulls/{UPSTREAM_PR_NUMBER}/comments")
 
-    # statusCheckRollup is fragile (nested unions); capture minimal info.
-    checks_raw = gh_api(f"repos/{UPSTREAM_REPO}/commits/{pr['headRefName']}/check-runs?per_page=100")
+    # commit SHA is required for check-runs endpoint, not branch name.
+    head_sha = pr.get("headRefOid") or ""
+    checks_raw = gh_api(f"repos/{UPSTREAM_REPO}/commits/{head_sha}/check-runs?per_page=100")
     checks = []
     failed_jobs = []
     for run in checks_raw.get("check_runs", []):
@@ -154,6 +155,7 @@ def fetch_state() -> dict[str, Any]:
             "changedFiles": pr.get("changedFiles"),
             "url": pr.get("url"),
             "headRefName": pr.get("headRefName"),
+            "headRefOid": head_sha,
             "baseRefName": pr.get("baseRefName"),
         },
         "issue": {
