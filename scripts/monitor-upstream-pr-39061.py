@@ -62,9 +62,9 @@ def gh(*args: str, check: bool = True) -> str:
 
 
 def gh_api(endpoint: str) -> Any:
-    """gh api <endpoint> --jq .  → returns parsed JSON."""
+    """gh api <endpoint> → returns parsed JSON. Endpoint must include full path (repos/owner/repo/...)."""
     result = subprocess.run(
-        ["gh", "api", endpoint, "--repo", UPSTREAM_REPO],
+        ["gh", "api", endpoint],
         capture_output=True,
         text=True,
     )
