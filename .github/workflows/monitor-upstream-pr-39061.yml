@@ -1,0 +1,40 @@
+name: monitor-upstream-pr-39061
+
+on:
+  schedule:
+    # 07:00 UTC = 10:00 Europe/Moscow, Mon-Fri
+    - cron: '0 7 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      log_only:
+        description: 'Only log to issue (no upstream actions)'
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run monitor
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UPSTREAM_REPO: go-gitea/gitea
+          UPSTREAM_PR_NUMBER: '39061'
+          UPSTREAM_ISSUE_NUMBER: '39060'
+          LOG_ISSUE_LABEL: monitor-pr-39061-log
+        run: python scripts/monitor-upstream-pr-39061.py
